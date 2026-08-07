@@ -5,6 +5,7 @@ import {
 import { Seconds, Ticks, Time } from "../type/Units.js";
 import { optionsFromArguments } from "../util/Defaults.js";
 import { readOnly } from "../util/Interface.js";
+import { EQ } from "../util/Math.js";
 import {
 	PlaybackState,
 	StateTimeline,
@@ -13,7 +14,6 @@ import {
 import { Timeline, TimelineEvent } from "../util/Timeline.js";
 import { isDefined } from "../util/TypeCheck.js";
 import { TickSignal } from "./TickSignal.js";
-import { EQ } from "../util/Math.js";
 
 interface TickSourceOptions extends ToneWithContextOptions {
 	frequency: number;
@@ -415,18 +415,28 @@ export class TickSource<
 
 		if (lastStateEvent && lastStateEvent.state === "started") {
 			const maxStartTime = Math.max(lastStateEvent.time, startTime);
-			// figure out the difference between the frequency ticks and the
+			// Figure out how far past the last whole-tick boundary maxStartTime
+			// sits, so we can compute the time of the next tick at or after it.
 			const startTicks = this.frequency.getTicksAtTime(maxStartTime);
 			const ticksAtStart = this.frequency.getTicksAtTime(
 				lastStateEvent.time
 			);
 			const diff = startTicks - ticksAtStart;
-			let offset = Math.ceil(diff) - diff;
-			// guard against floating point issues
-			offset = EQ(offset, 1) ? 0 : offset;
-			let nextTickTime = this.frequency.getTimeOfTick(
-				startTicks + offset
-			);
+			const offset = Math.ceil(diff) - diff;
+			// Guard against floating-point issues: when startTicks is just barely
+			// above an integer tick boundary (offset ≈ 1), snap back to that integer
+			const firstTick = EQ(offset, 1)
+				? Math.floor(startTicks)
+				: startTicks + offset;
+			let nextTickTime = this.frequency.getTimeOfTick(firstTick);
+			// Advance past any ticks that land before the start of this window
+			// to avoid any tick that was already processed.
+			if (nextTickTime < maxStartTime) {
+				nextTickTime += this.frequency.getDurationOfTicks(
+					1,
+					nextTickTime
+				);
+			}
 			while (nextTickTime < endTime) {
 				try {
 					callback(
@@ -434,7 +444,7 @@ export class TickSource<
 						Math.round(this.getTicksAtTime(nextTickTime))
 					);
 				} catch (e) {
-					error = e;
+					error = e as Error;
 					break;
 				}
 				nextTickTime += this.frequency.getDurationOfTicks(

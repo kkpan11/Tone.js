@@ -1,6 +1,6 @@
 import { Tone } from "../Tone.js";
-import { isDefined } from "./TypeCheck.js";
 import { assert } from "./Debug.js";
+import { isDefined } from "./TypeCheck.js";
 
 /**
  * An IntervalTimeline event must have a time and duration
@@ -470,7 +470,7 @@ class IntervalNode {
 	}
 
 	/**
-	 * Invoke the callback on this element and both it's branches
+	 * Invoke the callback on this element and both its branches
 	 * @param  {Function}  callback
 	 */
 	traverse(callback: (self: IntervalNode) => void): void {

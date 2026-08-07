@@ -1,6 +1,7 @@
-import { Volume } from "../component/channel/Volume.js";
 import "../core/context/Destination.js";
 import "../core/clock/Transport.js";
+
+import { Volume } from "../component/channel/Volume.js";
 import { Param } from "../core/context/Param.js";
 import {
 	OutputNode,
@@ -8,16 +9,16 @@ import {
 	ToneAudioNodeOptions,
 } from "../core/context/ToneAudioNode.js";
 import { Decibels, Seconds, Time } from "../core/type/Units.js";
+import { assert, assertContextRunning } from "../core/util/Debug.js";
 import { defaultArg } from "../core/util/Defaults.js";
 import { noOp, readOnly } from "../core/util/Interface.js";
+import { GT } from "../core/util/Math.js";
 import {
 	BasicPlaybackState,
 	StateTimeline,
 	StateTimelineEvent,
 } from "../core/util/StateTimeline.js";
 import { isDefined, isUndef } from "../core/util/TypeCheck.js";
-import { assert, assertContextRunning } from "../core/util/Debug.js";
-import { GT } from "../core/util/Math.js";
 
 type onStopCallback = (source: Source<any>) => void;
 
@@ -83,7 +84,7 @@ export abstract class Source<
 		offset?: Seconds;
 		/**
 		 * Either the buffer is explicitly scheduled to end using the stop method,
-		 * or it's implicitly ended when the buffer is over.
+		 * or its implicitly ended when the buffer is over.
 		 */
 		implicitEnd?: boolean;
 	}> = new StateTimeline("stopped");
@@ -173,6 +174,19 @@ export abstract class Source<
 	): void;
 
 	/**
+	 * Compute the buffer offset to use when the source is started mid-playback.
+	 * @param explicitOffset The buffer-time offset the caller passed to `start()`
+	 * @param transportElapsed Seconds of Transport time that have elapsed since
+	 *   this source was scheduled to start.
+	 */
+	protected _getSyncedStartOffset(
+		explicitOffset: Seconds,
+		transportElapsed: Seconds
+	): Seconds {
+		return explicitOffset + transportElapsed;
+	}
+
+	/**
 	 * Ensure that the scheduled time is not before the current time.
 	 * Should only be used when scheduled unsynced.
 	 */
@@ -216,7 +230,6 @@ export abstract class Source<
 			this.log("restart", computedTime);
 			this.restart(computedTime, offset, duration);
 		} else {
-			this.log("start", computedTime);
 			this._state.setStateAtTime("started", computedTime);
 			if (this._synced) {
 				// add the offset time to the event
@@ -338,7 +351,10 @@ export abstract class Source<
 						}
 						this._start(
 							time,
-							this.toSeconds(stateEvent.offset) + startOffset,
+							this._getSyncedStartOffset(
+								this.toSeconds(stateEvent.offset),
+								startOffset
+							),
 							duration
 						);
 					}

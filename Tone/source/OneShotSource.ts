@@ -4,8 +4,8 @@ import {
 	ToneAudioNodeOptions,
 } from "../core/context/ToneAudioNode.js";
 import { GainFactor, Seconds, Time } from "../core/type/Units.js";
-import { noOp } from "../core/util/Interface.js";
 import { assert } from "../core/util/Debug.js";
+import { noOp } from "../core/util/Interface.js";
 import { BasicPlaybackState } from "../core/util/StateTimeline.js";
 
 export type OneShotSourceCurve = "linear" | "exponential";
@@ -217,7 +217,7 @@ export abstract class OneShotSource<
 	/**
 	 * Get the playback state at the given time
 	 */
-	getStateAtTime = function (time: Time): BasicPlaybackState {
+	getStateAtTime = (time: Time): BasicPlaybackState => {
 		const computedTime = this.toSeconds(time);
 		if (
 			this._startTime !== -1 &&

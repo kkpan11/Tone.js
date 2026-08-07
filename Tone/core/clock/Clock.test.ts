@@ -1,4 +1,5 @@
 import { expect } from "chai";
+
 import { BasicTests } from "../../../test/helper/Basic.js";
 import { atTime, Offline, whenBetween } from "../../../test/helper/Offline.js";
 import { noOp } from "../util/Interface.js";
@@ -34,7 +35,7 @@ describe("Clock", () => {
 			expect(clock.frequency.value).to.equal(8);
 		});
 
-		it("can get and set it's values with the set/get", () => {
+		it("can get and set its values with the set/get", () => {
 			const clock = new Clock();
 			clock.set({
 				frequency: 2,

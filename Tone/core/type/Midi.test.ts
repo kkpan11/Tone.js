@@ -1,4 +1,6 @@
 import { expect } from "chai";
+import { Midi as TonalMidi } from "tonal";
+
 import { BasicTests } from "../../../test/helper/Basic.js";
 import { Offline } from "../../../test/helper/Offline.js";
 import { Frequency } from "./Frequency.js";
@@ -6,7 +8,6 @@ import { Midi, MidiClass } from "./Midi.js";
 import { Ticks } from "./Ticks.js";
 import { Time } from "./Time.js";
 import { TransportTime } from "./TransportTime.js";
-import { Midi as TonalMidi } from "tonal";
 
 describe("MidiClass", () => {
 	BasicTests(MidiClass);
@@ -67,6 +68,7 @@ describe("MidiClass", () => {
 
 		it("can convert from Midi", () => {
 			expect(Midi(Midi(2)).valueOf()).to.equal(2);
+			expect(Midi(60, "midi").valueOf()).to.equal(60);
 			expect(Midi(Midi("64n")).valueOf()).to.equal(24);
 			expect(Midi(Midi(64, "n")).valueOf()).to.equal(24);
 		});

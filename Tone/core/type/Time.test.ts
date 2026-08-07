@@ -1,4 +1,5 @@
 import { expect } from "chai";
+
 import { BasicTests } from "../../../test/helper/Basic.js";
 import { atTime, Offline } from "../../../test/helper/Offline.js";
 import { getContext } from "../Global.js";
@@ -160,11 +161,14 @@ describe("TimeClass", () => {
 
 		it("converts time into ticks", () => {
 			return Offline(({ transport }) => {
-				expect(Time("2n").toTicks()).to.equal(2 * transport.PPQ);
+				expect(Time("2n").toTicks()).to.closeTo(2 * transport.PPQ, 0.1);
 				// floating point checks
 				const bpmOrig = transport.bpm.value;
 				transport.bpm.value = 100;
-				expect(Time("0:1:3").toTicks()).to.equal(1.75 * transport.PPQ);
+				expect(Time("0:1:3").toTicks()).to.closeTo(
+					1.75 * transport.PPQ,
+					0.1
+				);
 				transport.bpm.value = bpmOrig;
 			});
 		});

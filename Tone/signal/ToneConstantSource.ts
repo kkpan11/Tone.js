@@ -1,5 +1,5 @@
-import { connect } from "../core/context/ToneAudioNode.js";
 import { Param } from "../core/context/Param.js";
+import { connect } from "../core/context/ToneAudioNode.js";
 import { Seconds, Time, UnitMap, UnitName } from "../core/type/Units.js";
 import { optionsFromArguments } from "../core/util/Defaults.js";
 import {
@@ -49,24 +49,16 @@ export class ToneConstantSource<
 		);
 		super(options);
 
-		const isSuspended =
-			!this.context.isOffline && this.context.state !== "running";
-
-		if (!isSuspended) {
-			this._source = this.context.createConstantSource();
-			connect(this._source, this._gainNode);
-		} else {
-			this.context.on("statechange", this._contextStarted);
-		}
+		this._onContextRunning(() => this._contextStarted());
 
 		this.offset = new Param({
 			context: this.context,
 			convert: options.convert,
-			param: isSuspended
+			param: !this._source
 				? // placeholder param until the context is started
 					this.context.createGain().gain
-				: this._source?.offset,
-			swappable: isSuspended,
+				: this._source.offset,
+			swappable: !this._source,
 			units: options.units,
 			value: options.offset,
 			minValue: options.minValue,
@@ -85,17 +77,14 @@ export class ToneConstantSource<
 	/**
 	 * Once the context is started, kick off source.
 	 */
-	private readonly _contextStarted = (state: AudioContextState) => {
-		if (state !== "running") {
-			return;
-		}
+	private _contextStarted() {
 		this._source = this.context.createConstantSource();
 		connect(this._source, this._gainNode);
-		this.offset.setParam(this._source.offset);
+		this.offset?.setParam(this._source.offset);
 		if (this.state === "started") {
 			this._source.start(0);
 		}
-	};
+	}
 
 	/**
 	 * Start the source node at the given time
@@ -123,7 +112,6 @@ export class ToneConstantSource<
 		}
 		this._source?.disconnect();
 		this.offset.dispose();
-		this.context.off("statechange", this._contextStarted);
 		return this;
 	}
 }

@@ -1,8 +1,9 @@
 import { expect } from "chai";
+
 import { BasicTests } from "../../test/helper/Basic.js";
 import { Offline, whenBetween } from "../../test/helper/Offline.js";
-import { ToneConstantSource } from "./ToneConstantSource.js";
 import { Context } from "../core/context/Context.js";
+import { ToneConstantSource } from "./ToneConstantSource.js";
 
 describe("ToneConstantSource", () => {
 	BasicTests(ToneConstantSource);
@@ -183,7 +184,7 @@ describe("ToneConstantSource", () => {
 		});
 	});
 
-	context.only("Suspended AudioContext", () => {
+	context("Suspended AudioContext", () => {
 		it("does nothing when AudioContext returns to suspended", () => {
 			const context = new Context();
 			expect(context.state).to.equal("suspended");

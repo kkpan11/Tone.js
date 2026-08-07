@@ -1,4 +1,6 @@
 import { expect } from "chai";
+import { Midi as TonalMidi, Note } from "tonal";
+
 import { BasicTests } from "../../../test/helper/Basic.js";
 import { Offline } from "../../../test/helper/Offline.js";
 import { getContext } from "../Global.js";
@@ -7,7 +9,6 @@ import { Midi } from "./Midi.js";
 import { Ticks } from "./Ticks.js";
 import { Time } from "./Time.js";
 import { TransportTime } from "./TransportTime.js";
-import { Note, Midi as TonalMidi } from "tonal";
 
 describe("FrequencyClass", () => {
 	BasicTests(Frequency);
@@ -127,9 +128,17 @@ describe("FrequencyClass", () => {
 		});
 
 		it("evaluates transport time", () => {
-			expect(Frequency("1:0").valueOf()).to.equal(0.5);
-			expect(Frequency("1:4:0").valueOf()).to.equal(0.25);
-			// expect(Frequency("2:1:0").valueOf()).to.equal(0.25);
+			return Offline(({ transport }) => {
+				transport.bpm.value = 120;
+				transport.timeSignature = 4;
+				expect(Frequency("1:0").valueOf()).to.equal(0.5);
+				expect(Frequency("2:0:0").valueOf()).to.equal(0.25);
+				expect(Frequency("1:1").valueOf()).to.be.closeTo(0.4, 0.0001);
+				expect(Frequency("1:0:2").valueOf()).to.be.closeTo(
+					120 / (60 * 4.5),
+					0.0001
+				);
+			});
 		});
 
 		it("evaluates midi", () => {

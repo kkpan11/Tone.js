@@ -1,9 +1,9 @@
 import { ToneAudioNode } from "../../core/context/ToneAudioNode.js";
 import { dbToGain } from "../../core/type/Conversions.js";
 import { Hertz, NormalRange, PowerOfTwo } from "../../core/type/Units.js";
+import { assert } from "../../core/util/Debug.js";
 import { optionsFromArguments } from "../../core/util/Defaults.js";
 import { MeterBase, MeterBaseOptions } from "./MeterBase.js";
-import { assert } from "../../core/util/Debug.js";
 
 export interface FFTOptions extends MeterBaseOptions {
 	size: PowerOfTwo;
@@ -16,7 +16,7 @@ export interface FFTOptions extends MeterBaseOptions {
  * Read more about FFT algorithms on [Wikipedia] (https://en.wikipedia.org/wiki/Fast_Fourier_transform).
  * @category Component
  */
-export class FFT extends MeterBase<FFTOptions> {
+export class FFT extends MeterBase<FFTOptions, 1> {
 	readonly name: string = "FFT";
 
 	/**
@@ -55,7 +55,7 @@ export class FFT extends MeterBase<FFTOptions> {
 	 * Returns the frequency data of length {@link size} as a Float32Array of decibel values.
 	 */
 	getValue(): Float32Array {
-		const values = this._analyser.getValue() as Float32Array;
+		const values = this._analyser.getValue();
 		return values.map((v) => (this.normalRange ? dbToGain(v) : v));
 	}
 
